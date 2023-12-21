@@ -54,7 +54,7 @@ func New(templateFS fs.FS, cronJobService cronjob.CronJobService, store sessions
 		oauth1Config: &oauth1.Config{
 			ConsumerKey:    conf.ConsumerKey,
 			ConsumerSecret: conf.ConsumerSecret,
-			CallbackURL:    "http://localhost:8080/callback",
+			CallbackURL:    "https://twitter-moon-nganu-production.up.railway.app/callback",
 			Endpoint:       twitterOAuth1.AuthenticateEndpoint,
 		},
 	}
