@@ -1,0 +1,30 @@
+{{ define "table" }}
+<table class="border-collapse w-10/12">
+    <tr>
+        <th class="border-2 border-solid border-black py-3 text-center">#</th>
+        <th class="border-2 border-solid border-black py-3 text-center">Time</th>
+        <th class="border-2 border-solid border-black py-3 text-center">Status</th>
+    </tr>
+    {{ range $i, $job := .History }}
+    <tr>
+        <td class="border-2 border-black text-center">{{ add $i 1 }}</td>
+        <td class="border-2 border-black text-center">{{ time $job.Unix }}</td>
+        {{ if eq $job.StatusText "OK" }}
+        <td class="border-2 border-black text-center text-green-700 font-bold">{{ $job.StatusText }}</td>
+        {{ else }}
+        <td class="border-2 border-black text-center text-red-700 font-bold">{{ $job.StatusText }}</td>
+        {{ end }}
+    </tr>
+    {{ else }}
+    {{ if .Err }}
+    <tr>
+        <td class="border-2 border-black text-center" colspan="3">{{ .Err }}</td>
+    </tr>
+    {{ else }}
+    <tr>
+        <td class="border-2 border-black text-center" colspan="3">No data yet</td>
+    </tr>
+    {{ end }}
+    {{ end }}
+</table>
+{{ end }}

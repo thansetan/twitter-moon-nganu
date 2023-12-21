@@ -1,0 +1,25 @@
+{{ define "home" }}
+{{ template "top" . }}
+{{ if .SignedIn }}
+<div class="font-sans flex items-center h-screen m-0 bg-gray-100 flex-col">
+    <header class="sticky top-0 z-50 border-b-2 border-black w-full">
+        {{ template "signedIn" .Name }}
+    </header>
+    <section class="mt-6 mb-3">
+        <h1 class="text-3xl font-bold text-center">Last 25 Jobs</h1>
+    </section>
+    <article class="w-full flex justify-center">
+        {{ template "table" . }}
+    </article>
+
+    {{ else }}
+    <div class="font-sans flex items-center h-screen m-0 bg-gray-100 flex-col justify-center">
+        {{ template "demo" }}
+        {{ template "signIn" }}
+    </div>
+    {{ end }}
+    <footer>
+    </footer>
+</div>
+{{ template "bottom" }}
+{{ end }}
