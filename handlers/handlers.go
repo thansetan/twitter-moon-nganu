@@ -6,6 +6,7 @@ import (
 	"go-twitter/utils"
 	"html/template"
 	"io/fs"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -14,19 +15,20 @@ import (
 	"github.com/dghubble/oauth1"
 	twitterOAuth1 "github.com/dghubble/oauth1/twitter"
 	"github.com/gorilla/sessions"
+	"github.com/redis/go-redis/v9"
 )
 
 type HomeData struct {
 	SignedIn bool
 	Name     string
-	History  []cronjob.JobHistory
+	History  cronjob.JobHistories
 	Err      string
 }
 
 var (
-	sessionName   = "twitter-moon-session"
-	sessionUserID = "userID"
-	sessionJobID  = "jobID"
+	sessionName     = "twitter-moon-session"
+	sessionUserName = "userID"
+	sessionJobID    = "jobID"
 )
 
 type Handler struct {
@@ -34,9 +36,11 @@ type Handler struct {
 	cronJobService cronjob.CronJobService
 	store          sessions.Store
 	oauth1Config   *oauth1.Config
+	redisClient    *redis.Client
+	logger         *slog.Logger
 }
 
-func New(templateFS fs.FS, cronJobService cronjob.CronJobService, store sessions.Store, conf utils.Config) Handler {
+func New(templateFS fs.FS, cronJobService cronjob.CronJobService, store sessions.Store, redisClient *redis.Client, conf utils.Config, logger *slog.Logger) Handler {
 	tmpl := template.Must(template.New("templates").Funcs(template.FuncMap{
 		"add": func(a, b int) int {
 			return a + b
@@ -57,6 +61,8 @@ func New(templateFS fs.FS, cronJobService cronjob.CronJobService, store sessions
 			CallbackURL:    "https://twitter-moon-nganu-production.up.railway.app/callback",
 			Endpoint:       twitterOAuth1.AuthenticateEndpoint,
 		},
+		redisClient: redisClient,
+		logger:      logger,
 	}
 }
 
@@ -71,18 +77,33 @@ func (h Handler) Home(w http.ResponseWriter, r *http.Request) {
 	session, _ := h.store.Get(r, sessionName)
 	if !session.IsNew {
 		jobID := session.Values[sessionJobID].(int)
-		history, err := h.cronJobService.GetHistory(jobID)
-		if err != nil {
-			data.Err = err.Error()
+		jobIDStr := fmt.Sprintf("%d", jobID)
+		err := h.redisClient.Get(r.Context(), jobIDStr).Scan(&data.History)
+		if err == redis.Nil {
+			history, err := h.cronJobService.GetHistory(jobID)
+			if err != nil {
+				data.Err = err.Error()
+			}
+			err = h.redisClient.Set(r.Context(), jobIDStr, cronjob.JobHistories(history), 30*time.Minute).Err()
+			if err != nil {
+				h.logger.Error("redis set data error", "error", err.Error())
+				http.Error(w, "something went wrong", http.StatusInternalServerError)
+				return
+			}
+			data.History = history
+		} else if err != nil {
+			h.logger.Error("redis get data error", "error", err.Error())
+			http.Error(w, "something went wrong", http.StatusInternalServerError)
+			return
 		}
+
 		data.SignedIn = true
-		data.History = history
-		data.Name = session.Values[sessionUserID].(string)
+		data.Name = session.Values[sessionUserName].(string)
 	}
 
 	err := h.tmpl.ExecuteTemplate(w, "home", data)
 	if err != nil {
-		fmt.Println(err)
+		h.logger.Error("render template error", "error", err.Error())
 	}
 }
 
@@ -119,15 +140,51 @@ func (h Handler) createJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jobID, err := h.cronJobService.CreateOrUpdate(user.IDStr, accessToken, accessTokenSecret)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	jobReqBody := cronjob.JobReqData{
+		AccessToken:       accessToken,
+		AccessTokenSecret: accessTokenSecret,
+	}
+	var storedJobReqBody cronjob.JobReqData
+
+	// try to get stored job data for current user
+	err = h.redisClient.Get(r.Context(), user.IDStr).Scan(&storedJobReqBody)
+	if err == redis.Nil { // if there's none, we create
+		err = h.cronJobService.CreateOrUpdate(user.IDStr, &jobReqBody)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// also save it to redis
+		err = h.redisClient.Set(r.Context(), user.IDStr, jobReqBody, 12*time.Hour).Err()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else if err != nil {
+		h.logger.Error("redis get data error", "error", err.Error())
 		return
+	} else { // if they exists
+		// check for the at and ats, if they have changed, update cron-job
+		jobReqBody.JobID = storedJobReqBody.JobID
+		if !jobReqBody.Eq(storedJobReqBody) {
+			err = h.cronJobService.CreateOrUpdate(user.IDStr, &jobReqBody)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			// save the new data to redis
+			err = h.redisClient.Set(r.Context(), user.IDStr, jobReqBody, 24*time.Hour).Err()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
 	}
 
 	session, _ := h.store.Get(r, sessionName)
-	session.Values[sessionUserID] = user.IDStr
-	session.Values[sessionJobID] = jobID
+	session.Values[sessionUserName] = user.ScreenName
+	session.Values[sessionJobID] = jobReqBody.JobID
 	err = session.Save(r, w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

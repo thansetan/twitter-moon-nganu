@@ -1,6 +1,6 @@
 {{ define "signedIn" }}
 <nav class="flex flex-row justify-between">
-    <div class="pl-1">Hi, {{ . }}!</div>
+    <div class="pl-1">Hi, <a href="http://x.com/{{.}}">@{{.}}</a>!</div>
     <a class="pr-1" href="/logout">Logout</a>
 </nav>
 {{ end }}

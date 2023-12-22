@@ -26,10 +26,21 @@ func main() {
 
 	logger := utils.NewLogger()
 	httpClient := new(http.Client)
+	redis, err := utils.NewRedisClient(conf.RedisURL)
+	if err != nil {
+		panic(err)
+	}
 
 	cronjobService := cronjob.NewCronJobService(conf.CronJobAPIKey, httpClient, logger)
 	sessionStore := sessions.NewCookieStore([]byte(conf.SessionKey))
-	handler := handlers.New(templates, cronjobService, sessionStore, conf)
+	handler := handlers.New(
+		templates,
+		cronjobService,
+		sessionStore,
+		redis,
+		conf,
+		logger,
+	)
 
 	mux := http.NewServeMux()
 

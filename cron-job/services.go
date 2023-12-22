@@ -9,7 +9,7 @@ import (
 )
 
 type CronJobService interface {
-	CreateOrUpdate(string, string, string) (int, error)
+	CreateOrUpdate(string, *JobReqData) error
 	GetHistory(int) ([]JobHistory, error)
 }
 
@@ -23,7 +23,7 @@ func NewCronJobService(APIKey string, client *http.Client, logger *slog.Logger) 
 	return cronjobService{APIKey, client, logger}
 }
 
-func (c cronjobService) CreateOrUpdate(title, accessToken, accessTokenSecret string) (int, error) {
+func (c cronjobService) CreateOrUpdate(title string, body *JobReqData) error {
 	var (
 		id     int
 		exists bool
@@ -31,7 +31,7 @@ func (c cronjobService) CreateOrUpdate(title, accessToken, accessTokenSecret str
 	jobs, err := c.getAll()
 	if err != nil {
 		c.logger.Error(err.Error())
-		return -1, err
+		return err
 	}
 
 	contains := func(jobs []JobData, title string) (int, bool) {
@@ -44,17 +44,18 @@ func (c cronjobService) CreateOrUpdate(title, accessToken, accessTokenSecret str
 	}
 
 	if id, exists = contains(jobs, title); exists {
-		err = c.update(id, accessToken, accessTokenSecret)
+		err = c.update(id, body.AccessToken, body.AccessTokenSecret)
 	} else {
-		id, err = c.create(title, accessToken, accessTokenSecret)
+		id, err = c.create(title, body.AccessToken, body.AccessTokenSecret)
 	}
 
 	if err != nil {
 		c.logger.Error(err.Error())
-		return -1, err
+		return err
 	}
+	body.JobID = id
 
-	return id, nil
+	return nil
 }
 
 func (c cronjobService) GetHistory(id int) ([]JobHistory, error) {
@@ -131,7 +132,10 @@ func (c cronjobService) getAll() ([]JobData, error) {
 }
 
 func (c cronjobService) newCreateRequest(title, at, ats string) *http.Request {
-	extendedBody := JobReqBody{at, ats}
+	extendedBody := JobReqData{
+		AccessToken:       at,
+		AccessTokenSecret: ats,
+	}
 	reqBody := CreateReqBody{
 		Job: JobData{
 			Title:         title,
@@ -176,7 +180,7 @@ func (c cronjobService) newUpdateRequest(id int, at, ats string) *http.Request {
 	reqBody := CreateReqBody{
 		Job: JobData{
 			ExtendedData: ExtendedData{
-				Body: JobReqBody{
+				Body: JobReqData{
 					AccessToken:       at,
 					AccessTokenSecret: ats,
 				}.String(),

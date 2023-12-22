@@ -9,6 +9,7 @@ type Config struct {
 	ConsumerSecret string `mapstructure:"CONSUMER_SECRET"`
 	CronJobAPIKey  string `mapstructure:"CRONJOB_API_KEY"`
 	SessionKey     string `mapstructure:"SESSION_KEY"`
+	RedisURL       string `mapstructure:"REDIS_URL"`
 }
 
 func LoadConfig(confFile string) (Config, error) {
