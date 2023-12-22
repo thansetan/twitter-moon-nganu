@@ -77,14 +77,14 @@ func (h Handler) Home(w http.ResponseWriter, r *http.Request) {
 	session, _ := h.store.Get(r, sessionName)
 	if !session.IsNew {
 		jobID := session.Values[sessionJobID].(int)
-		jobIDStr := fmt.Sprintf("%d", jobID)
-		err := h.redisClient.Get(r.Context(), jobIDStr).Scan(&data.History)
+		redisJobKey := fmt.Sprintf("job_%d", jobID)
+		err := h.redisClient.Get(r.Context(), redisJobKey).Scan(&data.History)
 		if err == redis.Nil {
 			history, err := h.cronJobService.GetHistory(jobID)
 			if err != nil {
 				data.Err = err.Error()
 			}
-			err = h.redisClient.Set(r.Context(), jobIDStr, cronjob.JobHistories(history), 30*time.Minute).Err()
+			err = h.redisClient.Set(r.Context(), redisJobKey, cronjob.JobHistories(history), 30*time.Minute).Err()
 			if err != nil {
 				h.logger.Error("redis set data error", "error", err.Error())
 				http.Error(w, "something went wrong", http.StatusInternalServerError)
@@ -145,9 +145,9 @@ func (h Handler) createJob(w http.ResponseWriter, r *http.Request) {
 		AccessTokenSecret: accessTokenSecret,
 	}
 	var storedJobReqBody cronjob.JobReqData
-
+	redisUserKey := fmt.Sprintf("user_%s", user.IDStr)
 	// try to get stored job data for current user
-	err = h.redisClient.Get(r.Context(), user.IDStr).Scan(&storedJobReqBody)
+	err = h.redisClient.Get(r.Context(), redisUserKey).Scan(&storedJobReqBody)
 	if err == redis.Nil { // if there's none, we create
 		err = h.cronJobService.CreateOrUpdate(user.IDStr, &jobReqBody)
 		if err != nil {
@@ -155,7 +155,7 @@ func (h Handler) createJob(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// also save it to redis
-		err = h.redisClient.Set(r.Context(), user.IDStr, jobReqBody, 12*time.Hour).Err()
+		err = h.redisClient.Set(r.Context(), redisUserKey, jobReqBody, 12*time.Hour).Err()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -174,7 +174,7 @@ func (h Handler) createJob(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// save the new data to redis
-			err = h.redisClient.Set(r.Context(), user.IDStr, jobReqBody, 24*time.Hour).Err()
+			err = h.redisClient.Set(r.Context(), redisUserKey, jobReqBody, 24*time.Hour).Err()
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return

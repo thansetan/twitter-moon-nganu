@@ -33,6 +33,7 @@ func main() {
 
 	cronjobService := cronjob.NewCronJobService(conf.CronJobAPIKey, httpClient, logger)
 	sessionStore := sessions.NewCookieStore([]byte(conf.SessionKey))
+	sessionStore.MaxAge(3 * 24 * 3600)
 	handler := handlers.New(
 		templates,
 		cronjobService,
