@@ -14,13 +14,14 @@ type CronJobService interface {
 }
 
 type cronjobService struct {
-	apiKey string
-	client *http.Client
-	logger *slog.Logger
+	apiKey              string
+	client              *http.Client
+	logger              *slog.Logger
+	twitterMoonEndpoint string
 }
 
-func NewCronJobService(APIKey string, client *http.Client, logger *slog.Logger) cronjobService {
-	return cronjobService{APIKey, client, logger}
+func NewCronJobService(APIKey, twitterMoonEndpoint string, client *http.Client, logger *slog.Logger) cronjobService {
+	return cronjobService{APIKey, client, logger, twitterMoonEndpoint}
 }
 
 func (c cronjobService) CreateOrUpdate(title string, body *JobReqData) error {
@@ -139,7 +140,7 @@ func (c cronjobService) newCreateRequest(title, at, ats string) *http.Request {
 	reqBody := CreateReqBody{
 		Job: JobData{
 			Title:         title,
-			URL:           "https://twitter-moon.vercel.app/picture",
+			URL:           c.twitterMoonEndpoint,
 			RequestMethod: 1,
 			Enabled:       true,
 			Schedule: Schedule{

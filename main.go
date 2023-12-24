@@ -31,7 +31,7 @@ func main() {
 		panic(err)
 	}
 
-	cronjobService := cronjob.NewCronJobService(conf.CronJobAPIKey, httpClient, logger)
+	cronjobService := cronjob.NewCronJobService(conf.CronJobAPIKey, conf.MoonEndpoint, httpClient, logger)
 	sessionStore := sessions.NewCookieStore([]byte(conf.SessionKey))
 	sessionStore.MaxAge(3 * 24 * 3600)
 	handler := handlers.New(

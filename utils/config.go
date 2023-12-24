@@ -10,6 +10,7 @@ type Config struct {
 	CronJobAPIKey  string `mapstructure:"CRONJOB_API_KEY"`
 	SessionKey     string `mapstructure:"SESSION_KEY"`
 	RedisURL       string `mapstructure:"REDIS_URL"`
+	MoonEndpoint   string `mapstructure:"MOON_ENDPOINT"`
 }
 
 func LoadConfig(confFile string) (Config, error) {
