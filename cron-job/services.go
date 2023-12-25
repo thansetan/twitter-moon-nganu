@@ -143,6 +143,7 @@ func (c cronjobService) newCreateRequest(title, at, ats string) *http.Request {
 			URL:           c.twitterMoonEndpoint,
 			RequestMethod: 1,
 			Enabled:       true,
+			SaveResponse:  true,
 			Schedule: Schedule{
 				Timezone:  "Asia/Jakarta",
 				ExpiresAt: 0,

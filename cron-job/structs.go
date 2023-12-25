@@ -15,9 +15,25 @@ type GetHistoryResp struct {
 }
 
 type JobHistory struct {
-	Unix       int64  `json:"date"`
-	Status     int    `json:"status"`
-	StatusText string `json:"statusText"`
+	Unix   int64 `json:"date"`
+	Status int   `json:"status"`
+}
+
+var statusMap = map[int]string{
+	0: "Unknown / not executed yet",
+	1: "OK",
+	2: "Failed (DNS error)",
+	3: "Failed (could not connect to host)",
+	4: "Failed (HTTP error)",
+	5: "Failed (timeout)",
+	6: "Failed (too much response data)",
+	7: "Failed (invalid URL)",
+	8: "Failed (internal errors)",
+	9: "Failed (unknown reason)",
+}
+
+func (jh JobHistory) GetStatusString() string {
+	return statusMap[jh.Status]
 }
 
 type JobData struct {
@@ -28,6 +44,7 @@ type JobData struct {
 	Enabled       bool         `json:"enabled,omitempty"`
 	Schedule      Schedule     `json:"schedule,omitempty"`
 	ExtendedData  ExtendedData `json:"extendedData,omitempty"`
+	SaveResponse  bool         `json:"saveResponses,omitempty"`
 }
 
 type Schedule struct {

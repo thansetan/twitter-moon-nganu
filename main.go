@@ -53,5 +53,7 @@ func main() {
 		mux.HandleFunc("/logout", handler.Logout)
 	}
 
-	http.ListenAndServe(fmt.Sprintf(":%s", helpers.EnvOrDefault("PORT", "8080")), mux)
+	port := helpers.EnvOrDefault("PORT", "8080")
+	fmt.Println("listening at port:", port)
+	http.ListenAndServe(fmt.Sprintf(":%s", port), mux)
 }

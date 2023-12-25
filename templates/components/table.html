@@ -9,10 +9,10 @@
     <tr>
         <td class="border-2 border-black text-center">{{ add $i 1 }}</td>
         <td class="border-2 border-black text-center">{{ time $job.Unix }}</td>
-        {{ if eq $job.StatusText "OK" }}
-        <td class="border-2 border-black text-center text-green-700 font-bold">{{ $job.StatusText }}</td>
+        {{ if eq $job.Status 1 }}
+        <td class="border-2 border-black text-center text-green-700 font-bold">{{ $job.GetStatusString }}</td>
         {{ else }}
-        <td class="border-2 border-black text-center text-red-700 font-bold">{{ $job.StatusText }}</td>
+        <td class="border-2 border-black text-center text-red-700 font-bold">{{ $job.GetStatusString }}</td>
         {{ end }}
     </tr>
     {{ else }}
