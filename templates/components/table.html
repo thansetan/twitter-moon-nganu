@@ -4,6 +4,7 @@
         <th class="border-2 border-solid border-black py-3 text-center">#</th>
         <th class="border-2 border-solid border-black py-3 text-center">Time</th>
         <th class="border-2 border-solid border-black py-3 text-center">Status</th>
+        <th class="border-2 border-solid border-black py-3 text-center">Error Message</th>
     </tr>
     {{ range $i, $job := .History }}
     <tr>
@@ -14,15 +15,20 @@
         {{ else }}
         <td class="border-2 border-black text-center text-red-700 font-bold">{{ $job.GetStatusString }}</td>
         {{ end }}
+        {{ if $job.APIResponse }}
+        <td class="border-2 border-black text-center text-red-700 font-bold"> {{ $job.APIResponse.Message }}</td>
+        {{ else }}
+        <td class="border-2 border-black text-center">-</td>
+        {{ end }}
     </tr>
     {{ else }}
     {{ if .Err }}
     <tr>
-        <td class="border-2 border-black text-center" colspan="3">{{ .Err }}</td>
+        <td class="border-2 border-black text-center text-red-700 font-bold" colspan="4">{{ .Err }}</td>
     </tr>
     {{ else }}
     <tr>
-        <td class="border-2 border-black text-center" colspan="3">No data yet</td>
+        <td class="border-2 border-black text-center font-bold" colspan="4">No data yet</td>
     </tr>
     {{ end }}
     {{ end }}

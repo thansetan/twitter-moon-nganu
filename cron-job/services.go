@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
+	"sync"
 )
 
 type CronJobService interface {
@@ -77,7 +79,42 @@ func (c cronjobService) GetHistory(id int) ([]JobHistory, error) {
 		return nil, err
 	}
 
+	var httpErrorHistory []*JobHistory
+	for i := range historyResp.History {
+		if historyResp.History[i].Status == FailedHTTPError {
+			httpErrorHistory = append(httpErrorHistory, &historyResp.History[i])
+		}
+	}
+
+	if len(httpErrorHistory) > 0 {
+		var wg sync.WaitGroup
+		for i := range httpErrorHistory {
+			wg.Add(1)
+			go c.getHistoryDetail(c.newHistoryDetailRequest(id, httpErrorHistory[i].Identifier), httpErrorHistory[i], &wg)
+		}
+		wg.Wait()
+	}
+
 	return historyResp.History, nil
+}
+
+func (c cronjobService) getHistoryDetail(req *http.Request, historyData *JobHistory, wg *sync.WaitGroup) {
+	defer wg.Done()
+	var jobHistoryDetails JobHistoryDetails
+
+	res, err := c.client.Do(req)
+	if err != nil || res.StatusCode != http.StatusOK {
+		return
+	}
+	defer res.Body.Close()
+	if err := json.NewDecoder(res.Body).Decode(&jobHistoryDetails); err != nil {
+		return
+	}
+	historyBody := strings.NewReader(jobHistoryDetails.JobHistoryDetails.Body.(string))
+
+	if json.NewDecoder(historyBody).Decode(&historyData.APIResponse); err != nil {
+		return
+	}
 }
 
 func (c cronjobService) create(title, accessToken, accessTokenSecret string) (int, error) {
@@ -201,6 +238,13 @@ func (c cronjobService) newUpdateRequest(id int, at, ats string) *http.Request {
 
 func (c cronjobService) newGetHistoryRequest(id int) *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("https://api.cron-job.org/jobs/%d/history", id), nil)
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
+
+	return req
+}
+
+func (c cronjobService) newHistoryDetailRequest(jobId int, historyId string) *http.Request {
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("https://api.cron-job.org/jobs/%d/history/%s", jobId, historyId), nil)
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
 
 	return req

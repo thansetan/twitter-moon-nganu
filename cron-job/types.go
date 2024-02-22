@@ -15,21 +15,48 @@ type GetHistoryResp struct {
 }
 
 type JobHistory struct {
-	Unix   int64 `json:"date"`
-	Status int   `json:"status"`
+	Unix        int64  `json:"date"`
+	Status      Status `json:"status"`
+	HttpStatus  int    `json:"httpStatus"`
+	Identifier  string `json:"identifier"`
+	Body        any    `json:"body"`
+	APIResponse *APIResponse
 }
 
-var statusMap = map[int]string{
-	0: "Unknown / not executed yet",
-	1: "OK",
-	2: "Failed (DNS error)",
-	3: "Failed (could not connect to host)",
-	4: "Failed (HTTP error)",
-	5: "Failed (timeout)",
-	6: "Failed (too much response data)",
-	7: "Failed (invalid URL)",
-	8: "Failed (internal errors)",
-	9: "Failed (unknown reason)",
+type JobHistoryDetails struct {
+	JobHistoryDetails JobHistory `json:"jobHistoryDetails"`
+}
+
+type APIResponse struct {
+	Message string `json:"message"`
+}
+
+type Status int
+
+const (
+	Unknown Status = iota
+	OK
+	FailedDNSErr
+	FailedCouldnotConnect
+	FailedHTTPError
+	FailedTimeout
+	FailedTooMuchData
+	FailedInvalidURL
+	FailedInternalErr
+	FailedUnknown
+)
+
+var statusMap = map[Status]string{
+	Unknown:               "Unknown / not executed yet",
+	OK:                    "OK",
+	FailedDNSErr:          "Failed (DNS error)",
+	FailedCouldnotConnect: "Failed (could not connect to host)",
+	FailedHTTPError:       "Failed (HTTP error)",
+	FailedTimeout:         "Failed (timeout)",
+	FailedTooMuchData:     "Failed (too much response data)",
+	FailedInvalidURL:      "Failed (invalid URL)",
+	FailedInternalErr:     "Failed (internal errors)",
+	FailedUnknown:         "Failed (unknown reason)",
 }
 
 func (jh JobHistory) GetStatusString() string {
@@ -49,7 +76,7 @@ type JobData struct {
 
 type Schedule struct {
 	Timezone  string `json:"timezone,omitempty"`
-	ExpiresAt int    `json:"expiresAt,omitemty"`
+	ExpiresAt int    `json:"expiresAt,omitempty"`
 	Hours     []int  `json:"hours,omitempty"`
 	MDays     []int  `json:"mdays,omitempty"`
 	Minutes   []int  `json:"minutes,omitempty"`

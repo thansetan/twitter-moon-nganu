@@ -112,7 +112,9 @@ func (h Handler) Login() http.Handler {
 }
 
 func (h Handler) Callback() http.Handler {
-	return twitter.CallbackHandler(h.oauth1Config, http.HandlerFunc(h.createJob), nil)
+	return twitter.CallbackHandler(h.oauth1Config, http.HandlerFunc(h.createJob), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/", http.StatusFound)
+	}))
 }
 
 func (h Handler) Logout(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +125,7 @@ func (h Handler) Logout(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func (h Handler) createJob(w http.ResponseWriter, r *http.Request) {
