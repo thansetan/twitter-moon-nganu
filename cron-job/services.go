@@ -79,21 +79,14 @@ func (c cronjobService) GetHistory(id int) ([]JobHistory, error) {
 		return nil, err
 	}
 
-	var httpErrorHistory []*JobHistory
+	var wg sync.WaitGroup
 	for i := range historyResp.History {
 		if historyResp.History[i].Status == FailedHTTPError {
-			httpErrorHistory = append(httpErrorHistory, &historyResp.History[i])
-		}
-	}
-
-	if len(httpErrorHistory) > 0 {
-		var wg sync.WaitGroup
-		for i := range httpErrorHistory {
 			wg.Add(1)
-			go c.getHistoryDetail(c.newHistoryDetailRequest(id, httpErrorHistory[i].Identifier), httpErrorHistory[i], &wg)
+			go c.getHistoryDetail(c.newHistoryDetailRequest(id, historyResp.History[i].Identifier), &historyResp.History[i], &wg)
 		}
-		wg.Wait()
 	}
+	wg.Wait()
 
 	return historyResp.History, nil
 }
