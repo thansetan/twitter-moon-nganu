@@ -1,4 +1,4 @@
-package utils
+package util
 
 import "github.com/redis/go-redis/v9"
 

@@ -3,11 +3,12 @@ package main
 import (
 	"embed"
 	"fmt"
-	cronjob "go-twitter/cron-job"
-	"go-twitter/handlers"
-	"go-twitter/helpers"
-	"go-twitter/utils"
 	"net/http"
+
+	"github.com/thansetan/twitter-moon-nganu/cronjob"
+	"github.com/thansetan/twitter-moon-nganu/handler"
+	"github.com/thansetan/twitter-moon-nganu/helper"
+	"github.com/thansetan/twitter-moon-nganu/util"
 
 	"github.com/gorilla/sessions"
 )
@@ -19,14 +20,14 @@ var templates embed.FS
 var assets embed.FS
 
 func main() {
-	conf, err := utils.LoadConfig("example.env")
+	conf, err := util.LoadConfig("example.env")
 	if err != nil {
 		panic(err)
 	}
 
-	logger := utils.NewLogger()
+	logger := util.NewLogger()
 	httpClient := new(http.Client)
-	redis, err := utils.NewRedisClient(conf.RedisURL)
+	redis, err := util.NewRedisClient(conf.RedisURL)
 	if err != nil {
 		panic(err)
 	}
@@ -34,7 +35,7 @@ func main() {
 	cronjobService := cronjob.NewCronJobService(conf.CronJobAPIKey, conf.MoonEndpoint, httpClient, logger)
 	sessionStore := sessions.NewCookieStore([]byte(conf.SessionKey))
 	sessionStore.MaxAge(3 * 24 * 3600)
-	handler := handlers.New(
+	handler := handler.New(
 		templates,
 		cronjobService,
 		sessionStore,
@@ -53,7 +54,7 @@ func main() {
 		mux.HandleFunc("/logout", handler.Logout)
 	}
 
-	port := helpers.EnvOrDefault("PORT", "8080")
+	port := helper.EnvOrDefault("PORT", "8080")
 	fmt.Println("listening at port:", port)
 	http.ListenAndServe(fmt.Sprintf(":%s", port), mux)
 }

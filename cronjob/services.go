@@ -33,7 +33,6 @@ func (c cronjobService) CreateOrUpdate(title string, body *JobReqData) error {
 	)
 	jobs, err := c.getAll()
 	if err != nil {
-		c.logger.Error(err.Error())
 		return err
 	}
 
@@ -53,7 +52,6 @@ func (c cronjobService) CreateOrUpdate(title string, body *JobReqData) error {
 	}
 
 	if err != nil {
-		c.logger.Error(err.Error())
 		return err
 	}
 	body.JobID = id
@@ -66,16 +64,16 @@ func (c cronjobService) GetHistory(id int) ([]JobHistory, error) {
 
 	res, err := c.client.Do(c.newGetHistoryRequest(id))
 	if err != nil {
-		c.logger.Error(err.Error())
+		c.logger.Error("unable to fetch job history", "job_id", id, "err", err.Error())
 		return nil, err
 	}
 	if res.StatusCode != http.StatusOK {
-		c.logger.Info("unable to fetch job history", "Code", res.StatusCode)
+		c.logger.Info("unable to fetch job history", "job_id", id, "code", res.StatusCode)
 		return nil, ErrFetchHistory
 	}
 	defer res.Body.Close()
 	if err := json.NewDecoder(res.Body).Decode(&historyResp); err != nil {
-		c.logger.Error(err.Error())
+		c.logger.Error("unable to fetch job history", "job_id", id, "err", err.Error())
 		return nil, err
 	}
 
@@ -96,16 +94,23 @@ func (c cronjobService) getHistoryDetail(req *http.Request, historyData *JobHist
 	var jobHistoryDetails JobHistoryDetails
 
 	res, err := c.client.Do(req)
-	if err != nil || res.StatusCode != http.StatusOK {
+	if err != nil {
+		c.logger.Error("unable to get history detail", "history_id", historyData.Identifier, "err", err)
+		return
+	}
+	if res.StatusCode != http.StatusOK {
+		c.logger.Info("unable to get history detail", "history_id", historyData.Identifier, "err", err)
 		return
 	}
 	defer res.Body.Close()
 	if err := json.NewDecoder(res.Body).Decode(&jobHistoryDetails); err != nil {
+		c.logger.Error("unable to get history detail", "history_id", historyData.Identifier, "err", err)
 		return
 	}
 	historyBody := strings.NewReader(jobHistoryDetails.JobHistoryDetails.Body.(string))
 
 	if json.NewDecoder(historyBody).Decode(&historyData.APIResponse); err != nil {
+		c.logger.Error("unable to get history detail", "history_id", historyData.Identifier, "err", err)
 		return
 	}
 }
@@ -114,6 +119,7 @@ func (c cronjobService) create(title, accessToken, accessTokenSecret string) (in
 	var job JobData
 	res, err := c.client.Do(c.newCreateRequest(title, accessToken, accessTokenSecret))
 	if err != nil {
+		c.logger.Error("unable to create a new job", "err", err.Error())
 		return -1, err
 	}
 
@@ -123,6 +129,7 @@ func (c cronjobService) create(title, accessToken, accessTokenSecret string) (in
 	}
 	defer res.Body.Close()
 	if err := json.NewDecoder(res.Body).Decode(&job); err != nil {
+		c.logger.Error("unable to create a new job", "err", err.Error())
 		return -1, err
 	}
 
@@ -132,11 +139,12 @@ func (c cronjobService) create(title, accessToken, accessTokenSecret string) (in
 func (c cronjobService) update(id int, accessToken, accessTokenSecret string) error {
 	res, err := c.client.Do(c.newUpdateRequest(id, accessToken, accessTokenSecret))
 	if err != nil {
+		c.logger.Error("unable to update job data", "job_id", id, "err", err.Error())
 		return err
 	}
 
 	if res.StatusCode != http.StatusOK {
-		c.logger.Info("unable to update job data", "Code", res.StatusCode)
+		c.logger.Info("unable to update job data", "code", res.StatusCode)
 		return ErrIDKHowToNameThis
 	}
 	return nil
@@ -146,16 +154,18 @@ func (c cronjobService) getAll() ([]JobData, error) {
 	var respObj GetAllResp
 	res, err := c.client.Do(c.newGetAllRequest())
 	if err != nil {
+		c.logger.Error("unable to fetch all jobs", "err", err.Error())
 		return respObj.Jobs, err
 	}
 
 	if res.StatusCode != http.StatusOK {
-		c.logger.Info("unable to fetch all job", "Code", res.StatusCode)
+		c.logger.Info("unable to fetch all jobs", "code", res.StatusCode)
 		return respObj.Jobs, ErrIDKHowToNameThis
 	}
 	defer res.Body.Close()
 
 	if err := json.NewDecoder(res.Body).Decode(&respObj); err != nil {
+		c.logger.Error("unable to fetch all jobs", "err", err.Error())
 		return respObj.Jobs, err
 	}
 

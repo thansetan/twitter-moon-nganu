@@ -16,7 +16,9 @@
         <td class="border-2 border-black text-center text-red-700 font-bold">{{ $job.GetStatusString }}</td>
         {{ end }}
         {{ if $job.APIResponse }}
-        <td class="border-2 border-black text-center text-red-700 font-bold"> {{ $job.APIResponse.Message }}</td>
+        <td class="border-2 border-black text-center text-red-700 font-bold">{{ $job.APIResponse.Message }}</td>
+        {{ else if ne $job.Status 1}}
+        <td class="border-2 border-black text-center text-red-700 font-bold">unknown</td>
         {{ else }}
         <td class="border-2 border-black text-center">-</td>
         {{ end }}

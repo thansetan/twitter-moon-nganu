@@ -1,14 +1,15 @@
-package handlers
+package handler
 
 import (
 	"fmt"
-	cronjob "go-twitter/cron-job"
-	"go-twitter/utils"
 	"html/template"
 	"io/fs"
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/thansetan/twitter-moon-nganu/cronjob"
+	"github.com/thansetan/twitter-moon-nganu/util"
 
 	oauth1Login "github.com/dghubble/gologin/oauth1"
 	"github.com/dghubble/gologin/twitter"
@@ -40,7 +41,7 @@ type Handler struct {
 	logger         *slog.Logger
 }
 
-func New(templateFS fs.FS, cronJobService cronjob.CronJobService, store sessions.Store, redisClient *redis.Client, conf utils.Config, logger *slog.Logger) Handler {
+func New(templateFS fs.FS, cronJobService cronjob.CronJobService, store sessions.Store, redisClient *redis.Client, conf util.Config, logger *slog.Logger) Handler {
 	tmpl := template.Must(template.New("templates").Funcs(template.FuncMap{
 		"add": func(a, b int) int {
 			return a + b

@@ -1,4 +1,4 @@
-module go-twitter
+module github.com/thansetan/twitter-moon-nganu
 
 go 1.21.5
 
