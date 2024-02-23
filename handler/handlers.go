@@ -194,5 +194,5 @@ func (h Handler) createJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/", http.StatusFound)
 }

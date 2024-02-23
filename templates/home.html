@@ -1,7 +1,7 @@
 {{ define "home" }}
 {{ template "top" . }}
-{{ if .SignedIn }}
 <div class="font-sans flex items-center h-full m-0 flex-col">
+{{ if .SignedIn }}
     <header class="sticky top-0 z-50 border-b-2 border-black w-full bg-white">
         {{ template "signedIn" .Name }}
     </header>
@@ -11,13 +11,12 @@
     <article class="w-full flex justify-center">
         {{ template "table" . }}
     </article>
-
-    {{ else }}
+{{ else }}
     <div class="font-sans flex items-center h-screen m-0 flex-col justify-center">
         {{ template "demo" }}
         {{ template "signIn" }}
     </div>
-    {{ end }}
+{{ end }}
     <footer class="mt-6">
     </footer>
 </div>
