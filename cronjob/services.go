@@ -189,7 +189,7 @@ func (c cronjobService) newCreateRequest(title, at, ats string) *http.Request {
 				ExpiresAt: 0,
 				Hours:     []int{-1},
 				MDays:     []int{-1},
-				Minutes:   []int{31},
+				Minutes:   []int{32},
 				Months:    []int{-1},
 				WDays:     []int{-1},
 			},
