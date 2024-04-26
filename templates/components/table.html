@@ -9,7 +9,7 @@
     {{ range $i, $job := .History }}
     <tr>
         <td class="border-2 border-black text-center">{{ add $i 1 }}</td>
-        <td class="border-2 border-black text-center">{{ time $job.Unix }}</td>
+        <td class="border-2 border-black text-center" data-unix="{{ $job.Unix }}"></td>
         {{ if eq $job.Status 1 }}
         <td class="border-2 border-black text-center text-green-700 font-bold">{{ $job.GetStatusString }}</td>
         {{ else }}
@@ -35,4 +35,19 @@
     {{ end }}
     {{ end }}
 </table>
+<script>
+    document.querySelectorAll('td[data-unix]').forEach(function (element) {
+        const unix = element.getAttribute('data-unix');
+        const date = new Date(parseInt(unix) * 1000);
+        element.innerText = date.toLocaleString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            timeZoneName: 'short',
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        });
+    });
+</script>
 {{ end }}
