@@ -14,7 +14,6 @@ import (
 	oauth1Login "github.com/dghubble/gologin/oauth1"
 	"github.com/dghubble/gologin/twitter"
 	"github.com/dghubble/oauth1"
-	twitterOAuth1 "github.com/dghubble/oauth1/twitter"
 	"github.com/gorilla/sessions"
 	"github.com/redis/go-redis/v9"
 )
@@ -60,7 +59,11 @@ func New(templateFS fs.FS, cronJobService cronjob.CronJobService, store sessions
 			ConsumerKey:    conf.ConsumerKey,
 			ConsumerSecret: conf.ConsumerSecret,
 			CallbackURL:    "https://twitter-moon-nganu-production.up.railway.app/callback",
-			Endpoint:       twitterOAuth1.AuthenticateEndpoint,
+			Endpoint: oauth1.Endpoint{
+				AuthorizeURL:    "https://api.x.com/oauth/authenticate",
+				RequestTokenURL: "https://api.x.com/oauth/request_token",
+				AccessTokenURL:  "https://api.x.com/oauth/access_token",
+			},
 		},
 		redisClient: redisClient,
 		logger:      logger,
