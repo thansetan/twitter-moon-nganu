@@ -122,3 +122,7 @@ func (h JobHistories) MarshalBinary() ([]byte, error) {
 func (h *JobHistories) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, h)
 }
+
+func (h JobHistories) Len() int {
+	return len(h)
+}
