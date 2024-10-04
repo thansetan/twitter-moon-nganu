@@ -20,7 +20,7 @@ var templates embed.FS
 var assets embed.FS
 
 func main() {
-	conf, err := util.LoadConfig(".env")
+	conf, err := util.LoadConfig("example.env")
 	if err != nil {
 		panic(err)
 	}
