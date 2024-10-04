@@ -19,10 +19,10 @@ import (
 )
 
 type HomeData struct {
-	SignedIn bool
 	Name     string
-	History  cronjob.JobHistories
 	Err      string
+	History  cronjob.JobHistories
+	SignedIn bool
 }
 
 var (
@@ -58,7 +58,7 @@ func New(templateFS fs.FS, cronJobService cronjob.CronJobService, store sessions
 		oauth1Config: &oauth1.Config{
 			ConsumerKey:    conf.ConsumerKey,
 			ConsumerSecret: conf.ConsumerSecret,
-			CallbackURL:    "https://twitter-moon-nganu-production.up.railway.app/callback",
+			CallbackURL:    conf.CallbackURL,
 			Endpoint: oauth1.Endpoint{
 				AuthorizeURL:    "https://api.x.com/oauth/authenticate",
 				RequestTokenURL: "https://api.x.com/oauth/request_token",

@@ -20,7 +20,7 @@ var templates embed.FS
 var assets embed.FS
 
 func main() {
-	conf, err := util.LoadConfig("example.env")
+	conf, err := util.LoadConfig(".env")
 	if err != nil {
 		panic(err)
 	}
@@ -56,5 +56,5 @@ func main() {
 
 	port := helper.EnvOrDefault("PORT", "8080")
 	fmt.Println("listening at port:", port)
-	http.ListenAndServe(fmt.Sprintf(":%s", port), mux)
+	_ = http.ListenAndServe(fmt.Sprintf(":%s", port), mux)
 }

@@ -15,12 +15,12 @@ type GetHistoryResp struct {
 }
 
 type JobHistory struct {
-	Unix        int64  `json:"date"`
-	Status      Status `json:"status"`
-	HttpStatus  int    `json:"httpStatus"`
-	Identifier  string `json:"identifier"`
-	Body        any    `json:"body"`
+	Body        any `json:"body"`
 	APIResponse *APIResponse
+	Identifier  string `json:"identifier"`
+	Status      Status `json:"status"`
+	Unix        int64  `json:"date"`
+	HttpStatus  int    `json:"httpStatus"`
 }
 
 type JobHistoryDetails struct {
@@ -64,24 +64,24 @@ func (jh JobHistory) GetStatusString() string {
 }
 
 type JobData struct {
-	ID            int          `json:"jobId,omitempty"`
-	Title         string       `json:"title,omitempty"`
 	URL           string       `json:"url,omitempty"`
+	Title         string       `json:"title,omitempty"`
+	ExtendedData  ExtendedData `json:"extendedData,omitempty"`
+	Schedule      Schedule     `json:"schedule,omitempty"`
+	ID            int          `json:"jobId,omitempty"`
 	RequestMethod int          `json:"requestMethod,omitempty"`
 	Enabled       bool         `json:"enabled,omitempty"`
-	Schedule      Schedule     `json:"schedule,omitempty"`
-	ExtendedData  ExtendedData `json:"extendedData,omitempty"`
 	SaveResponse  bool         `json:"saveResponses,omitempty"`
 }
 
 type Schedule struct {
 	Timezone  string `json:"timezone,omitempty"`
-	ExpiresAt int    `json:"expiresAt,omitempty"`
 	Hours     []int  `json:"hours,omitempty"`
 	MDays     []int  `json:"mdays,omitempty"`
 	Minutes   []int  `json:"minutes,omitempty"`
 	Months    []int  `json:"months,omitempty"`
 	WDays     []int  `json:"wdays,omitempty"`
+	ExpiresAt int    `json:"expiresAt,omitempty"`
 }
 
 type ExtendedData struct {

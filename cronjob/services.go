@@ -109,7 +109,7 @@ func (c cronjobService) getHistoryDetail(req *http.Request, historyData *JobHist
 	}
 	historyBody := strings.NewReader(jobHistoryDetails.JobHistoryDetails.Body.(string))
 
-	if json.NewDecoder(historyBody).Decode(&historyData.APIResponse); err != nil {
+	if err := json.NewDecoder(historyBody).Decode(&historyData.APIResponse); err != nil {
 		c.logger.Error("unable to get history detail", "history_id", historyData.Identifier, "error", err)
 		return
 	}

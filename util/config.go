@@ -11,6 +11,7 @@ type Config struct {
 	SessionKey     string `mapstructure:"SESSION_KEY"`
 	RedisURL       string `mapstructure:"REDIS_URL"`
 	MoonEndpoint   string `mapstructure:"MOON_ENDPOINT"`
+	CallbackURL    string `mapstructure:"CALLBACK_URL"`
 }
 
 func LoadConfig(confFile string) (Config, error) {
