@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io/fs"
 	"log/slog"
+	"math"
 	"net/http"
 	"time"
 
@@ -48,6 +49,41 @@ func New(templateFS fs.FS, cronJobService cronjob.CronJobService, store sessions
 		"time": func(sec int64) string {
 			t := time.Unix(sec, 0)
 			return t.Format("02 Jan 2006 15:04:05 MST")
+		},
+		"moon": func() string {
+			julian := func(year, month, day int) float64 {
+				if month <= 2 {
+					year--
+					month += 12
+				}
+				A := year / 100
+				B := A / 4
+				C := 2 - A + B
+				E := int(365.25 * float64(year+4716))
+				F := int(30.6001 * float64(month+1))
+				return float64(C+day+E+F) - 1524.5
+			}
+			now := time.Now()
+			j := julian(now.Year(), int(now.Month()), now.Day())
+			p := math.Mod(j-julian(2000, 1, 6), 29.530588853)
+			moonPhases := map[float64]string{
+				0:        "🌑",
+				1.84566:  "🌒",
+				5.53588:  "🌓",
+				9.22831:  "🌔",
+				12.91963: "🌕",
+				16.61069: "🌖",
+				20.30228: "🌗",
+				23.99361: "🌘",
+				27.68493: "🌑",
+			}
+			var closestKey float64
+			for k := range moonPhases {
+				if k <= p {
+					closestKey = max(closestKey, k)
+				}
+			}
+			return moonPhases[closestKey]
 		},
 	}).ParseFS(templateFS, "*/*.html", "*/*/*.html"))
 
